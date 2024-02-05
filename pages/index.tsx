@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Task } from '@/models/taskTypes';
 import { GetServerSideProps } from 'next';
 import EditTaskModal from '@/components/EditTaskModal';
+import { IoEye, IoEyeOff } from 'react-icons/io5';
 
 interface HomeProps {
   tasks: Task[];
@@ -10,6 +11,7 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = (props) => {
   const [tasks, setTasks] = useState<Task[]>(props.tasks);
+
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
 
@@ -17,7 +19,7 @@ const Home: React.FC<HomeProps> = (props) => {
   const [taskDescription, setTaskDescription] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [showSuccessMessage, setShowSuccessMessage] = useState<boolean>(false);
-  const [showCompleted, setShowCompleted] = React.useState<boolean>(true);
+  const [showCompleted, setShowCompleted] = useState<boolean>(true);
 
   const toggleShowCompleted = () => {
     setShowCompleted(!showCompleted);
@@ -91,14 +93,75 @@ const Home: React.FC<HomeProps> = (props) => {
     }
   };
 
+  const handleCheckboxChange = async (task: Task) => {
+    const updatedIsCompleted = !task.is_completed;
+
+    try {
+      const response = await axios.patch(`https://wayi.league-funny.com/api/task/${task.id}`, {
+        ...task,
+        is_completed: updatedIsCompleted,
+        updated_at: new Date(),
+      });
+
+      if (response.status === 200) {
+        setTasks((currentTasks) =>
+          currentTasks.map((t) =>
+            t.id === task.id ? { ...t, is_completed: updatedIsCompleted, updated_at: new Date() } : t
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  };
+
+  const handleRemoveTask = async (id: number) => {
+    try {
+      const response = await axios.delete(`https://wayi.league-funny.com/api/task/${id}`);
+      if (response.status === 204) {
+        setTasks(tasks.filter((task) => task.id !== id));
+      }
+      console.log(response);
+    } catch (error) {
+      console.error('Failed to remove task:', error);
+    }
+  };
+
+  useEffect(() => {
+    const saved = localStorage.getItem('showCompleted');
+    if (saved !== null) {
+      setShowCompleted(saved === 'true');
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('showCompleted', showCompleted.toString());
+  }, [showCompleted]);
+
   return (
-    <div className='max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-16'>
-      <div className='px-4 py-2 flex items-center justify-center'>
-        <h1 className='text-gray-800 font-bold text-2xl uppercase'>To-Do List</h1>{' '}
+    <div className='max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-16'>
+      <div className='px-4 py-2 flex flex-col items-center justify-center'>
+        <h1 className='text-gray-800 font-bold text-2xl uppercase'>To-Do List</h1>
         <button
           className='ml-2'
           onClick={toggleShowCompleted}>
-          {showCompleted ? '隱藏已完成任務' : '顯示已完成任務'}
+          {showCompleted ? (
+            <span className='flex items-center justify-center'>
+              <IoEyeOff
+                size={16}
+                className='mx-1'
+              />
+              隱藏已完成任務
+            </span>
+          ) : (
+            <span className='flex mx-1 items-center justify-center'>
+              <IoEye
+                size={16}
+                className='mx-1'
+              />
+              顯示已完成任務
+            </span>
+          )}
         </button>
       </div>
       <form
@@ -137,18 +200,19 @@ const Home: React.FC<HomeProps> = (props) => {
             <li
               key={task.id}
               className='py-4'>
-              <div className='flex items-center justify-evenly'>
+              <div className='flex items-center justify-evenly relative'>
                 <input
                   name={task.name}
                   type='checkbox'
                   className='h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded'
+                  checked={task.is_completed}
+                  onChange={() => handleCheckboxChange(task)}
                 />
                 <label
                   htmlFor={task.name}
-                  className='ml-3 text-gray-900 flex flex-col w-1/2'>
+                  className={`ml-3 text-gray-900 flex flex-col w-1/2 ${task.is_completed ? 'line-through' : ''}`}>
                   <span className='text-lg font-medium'>Todo: {task.name}</span>
                   <span className='text-lg font-medium'>desc: {task.description}</span>
-                  <span className='text-lg font-medium'>is_completed: {task.is_completed ? '已完成' : '未完成'}</span>
                   <span className='text-sm font-light text-gray-500'>
                     created_at: {task.created_at && formatDate(task.created_at)}
                   </span>
@@ -156,11 +220,20 @@ const Home: React.FC<HomeProps> = (props) => {
                     updated_at: {task.updated_at && formatDate(task.updated_at)}
                   </span>
                 </label>
-                <button
-                  onClick={() => handleEditClick(task)}
-                  className='flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded'>
-                  編輯
-                </button>
+                <div className='flex flex-col'>
+                  <button
+                    onClick={() => handleEditClick(task)}
+                    className='my-1 flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded'>
+                    編輯
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleRemoveTask(task.id);
+                    }}
+                    className='my-1 flex-shrink-0 bg-red-500 hover:bg-red-700 border-red-500 hover:border-red-700 text-sm border-4 text-white py-1 px-2 rounded'>
+                    刪除
+                  </button>
+                </div>
               </div>
             </li>
           ))}
