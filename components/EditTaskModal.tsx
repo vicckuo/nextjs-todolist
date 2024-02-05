@@ -17,6 +17,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave }) 
       setError('請填寫欄位');
       return false;
     }
+    if (name.length > 10) {
+      setError('任務名稱不能超過10個字。');
+      return false;
+    }
+    if (description.length > 30) {
+      setError('任務描述不能超過30個字。');
+      return false;
+    }
     setError('');
     return true;
   };
@@ -43,6 +51,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave }) 
               id='taskName'
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
               className='mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
               required
             />

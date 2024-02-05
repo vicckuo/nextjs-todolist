@@ -38,6 +38,16 @@ const Home: React.FC<HomeProps> = (props) => {
       return;
     }
 
+    if (taskName.length > 10) {
+      setError('任務名稱不能超過10個字');
+      return;
+    }
+
+    if (taskDescription.length > 30) {
+      setError('任務描述不能超過30個字');
+      return;
+    }
+
     try {
       const response = await axios.post('https://wayi.league-funny.com/api/task', {
         name: taskName,
@@ -73,11 +83,7 @@ const Home: React.FC<HomeProps> = (props) => {
     try {
       const response = await axios.put(`https://wayi.league-funny.com/api/task/${id}`, { name, description });
       if (response.status === 200) {
-        setTasks(
-          tasks.map((task) =>
-            task.id === id ? { ...task, name, description, updated_at: new Date().toISOString() } : task
-          )
-        );
+        setTasks(tasks.map((task) => (task.id === id ? { ...task, name, description, updated_at: new Date() } : task)));
         setShowEditModal(false);
       }
     } catch (error) {
@@ -105,6 +111,7 @@ const Home: React.FC<HomeProps> = (props) => {
             className='appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
             type='text'
             placeholder='新增待辦任務'
+            required
           />
           <input
             value={taskDescription}
@@ -112,6 +119,7 @@ const Home: React.FC<HomeProps> = (props) => {
             type='text'
             placeholder='新增任務描述'
             className='appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none'
+            required
           />
           <button
             className='flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded'
@@ -137,10 +145,9 @@ const Home: React.FC<HomeProps> = (props) => {
                 />
                 <label
                   htmlFor={task.name}
-                  className='ml-3 text-gray-900 flex flex-col'>
-                  <span className='text-lg font-medium'>id: {task.id}</span>
-                  <span className='text-lg font-medium'>name: {task.name}</span>
-                  <span className='text-lg font-medium'>description: {task.description}</span>
+                  className='ml-3 text-gray-900 flex flex-col w-1/2'>
+                  <span className='text-lg font-medium'>Todo: {task.name}</span>
+                  <span className='text-lg font-medium'>desc: {task.description}</span>
                   <span className='text-lg font-medium'>is_completed: {task.is_completed ? '已完成' : '未完成'}</span>
                   <span className='text-sm font-light text-gray-500'>
                     created_at: {task.created_at && formatDate(task.created_at)}
