@@ -3,6 +3,6 @@ export interface Task {
   name: string;
   description: string;
   is_completed: boolean;
-  created_at?: string;
-  updated_at?: string;
+  created_at?: Date;
+  updated_at?: Date;
 }
