@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Task } from '@/models/taskTypes';
 import { GetServerSideProps } from 'next';
+import EditTaskModal from '@/components/EditTaskModal';
 
 interface HomeProps {
   tasks: Task[];
@@ -9,6 +10,8 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = (props) => {
   const [tasks, setTasks] = useState<Task[]>(props.tasks);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [currentTask, setCurrentTask] = useState<Task | null>(null);
 
   const [taskName, setTaskName] = useState<string>('');
   const [taskDescription, setTaskDescription] = useState<string>('');
@@ -22,7 +25,9 @@ const Home: React.FC<HomeProps> = (props) => {
 
   const formatDate = (dateString: string | number | Date) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    return `${date.getFullYear()}/${
+      date.getMonth() + 1
+    }/${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
   };
 
   const handleAddTask = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -59,9 +64,30 @@ const Home: React.FC<HomeProps> = (props) => {
     }
   };
 
+  const handleEditClick = (task: Task) => {
+    setCurrentTask(task);
+    setShowEditModal(true);
+  };
+
+  const handleSaveTask = async (id: number, name: string, description: string) => {
+    try {
+      const response = await axios.put(`https://wayi.league-funny.com/api/task/${id}`, { name, description });
+      if (response.status === 200) {
+        setTasks(
+          tasks.map((task) =>
+            task.id === id ? { ...task, name, description, updated_at: new Date().toISOString() } : task
+          )
+        );
+        setShowEditModal(false);
+      }
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  };
+
   return (
     <div className='max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-16'>
-      <div className='px-4 py-2 flex'>
+      <div className='px-4 py-2 flex items-center justify-center'>
         <h1 className='text-gray-800 font-bold text-2xl uppercase'>To-Do List</h1>{' '}
         <button
           className='ml-2'
@@ -93,17 +119,18 @@ const Home: React.FC<HomeProps> = (props) => {
             新增
           </button>
         </div>
-        {error && <p className='bg-red-500 my-2 rounded-md text-white pl-2'>{error}</p>}
+        {error && <p className='my-2 text-red-500'>{error}</p>}
         {showSuccessMessage && <p className='bg-green-500 my-2 rounded-md text-white pl-2'>新增成功</p>}
       </form>
       <ul className='divide-y divide-gray-200 px-4'>
         {tasks
           .filter((task) => showCompleted || !task.is_completed)
           .map((task) => (
-            <li className='py-4'>
-              <div className='flex items-center'>
+            <li
+              key={task.id}
+              className='py-4'>
+              <div className='flex items-center justify-evenly'>
                 <input
-                  key={task.id}
                   name={task.name}
                   type='checkbox'
                   className='h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded'
@@ -122,9 +149,21 @@ const Home: React.FC<HomeProps> = (props) => {
                     updated_at: {task.updated_at && formatDate(task.updated_at)}
                   </span>
                 </label>
+                <button
+                  onClick={() => handleEditClick(task)}
+                  className='flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded'>
+                  編輯
+                </button>
               </div>
             </li>
           ))}
+        {showEditModal && currentTask && (
+          <EditTaskModal
+            task={currentTask}
+            onClose={() => setShowEditModal(false)}
+            onSave={handleSaveTask}
+          />
+        )}
       </ul>
     </div>
   );
