@@ -127,16 +127,16 @@ const Home: React.FC<HomeProps> = (props) => {
     }
   };
 
-  useEffect(() => {
-    const saved = localStorage.getItem('showCompleted');
-    if (saved !== null) {
-      setShowCompleted(saved === 'true');
-    }
-  }, []);
+  // useEffect(() => {
+  //   const saved = localStorage.getItem('showCompleted');
+  //   if (saved !== null) {
+  //     setShowCompleted(saved === 'true');
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    localStorage.setItem('showCompleted', showCompleted.toString());
-  }, [showCompleted]);
+  // useEffect(() => {
+  //   localStorage.setItem('showCompleted', showCompleted.toString());
+  // }, [showCompleted]);
 
   return (
     <div className='max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-16'>
