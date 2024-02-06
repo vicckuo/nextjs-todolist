@@ -127,16 +127,16 @@ const Home: React.FC<HomeProps> = (props) => {
     }
   };
 
-  // useEffect(() => {
-  //   const saved = localStorage.getItem('showCompleted');
-  //   if (saved !== null) {
-  //     setShowCompleted(saved === 'true');
-  //   }
-  // }, []);
+  useEffect(() => {
+    const saved = localStorage.getItem('showCompleted');
+    if (saved !== null) {
+      setShowCompleted(saved === 'true');
+    }
+  }, []);
 
-  // useEffect(() => {
-  //   localStorage.setItem('showCompleted', showCompleted.toString());
-  // }, [showCompleted]);
+  useEffect(() => {
+    localStorage.setItem('showCompleted', showCompleted.toString());
+  }, [showCompleted]);
 
   return (
     <div className='max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-16'>
@@ -208,9 +208,7 @@ const Home: React.FC<HomeProps> = (props) => {
                   checked={task.is_completed}
                   onChange={() => handleCheckboxChange(task)}
                 />
-                <label
-                  htmlFor={task.name}
-                  className={`ml-3 text-gray-900 flex flex-col w-1/2 ${task.is_completed ? 'line-through' : ''}`}>
+                <div className={`ml-3 text-gray-900 flex flex-col w-1/2 ${task.is_completed ? 'line-through' : ''}`}>
                   <span className='text-lg font-medium'>Todo: {task.name}</span>
                   <span className='text-lg font-medium'>desc: {task.description}</span>
                   <span className='text-sm font-light text-gray-500'>
@@ -219,7 +217,7 @@ const Home: React.FC<HomeProps> = (props) => {
                   <span className='text-sm font-light text-gray-500'>
                     updated_at: {task.updated_at && formatDate(task.updated_at)}
                   </span>
-                </label>
+                </div>
                 <div className='flex flex-col'>
                   <button
                     onClick={() => handleEditClick(task)}
